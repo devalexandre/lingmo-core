@@ -15,6 +15,7 @@
 #include <QTimer>
 #include <QThread>
 #include <QDir>
+#include <QSet>
 
 #include <QDBusInterface>
 #include <QDBusPendingCall>
@@ -213,13 +214,30 @@ void ProcessManager::loadAutoStartProcess()
     const QStringList dirs = QStandardPaths::locateAll(QStandardPaths::GenericConfigLocation,
                                                        QStringLiteral("autostart"),
                                                        QStandardPaths::LocateDirectory);
+    // XDG autostart: an entry in ~/.config/autostart replaces the system one with
+    // the same file name (locateAll lists the user directory first)
+    QSet<QString> seen;
     for (const QString &dir : dirs) {
         const QDir d(dir);
         const QStringList fileNames = d.entryList(QStringList() << QStringLiteral("*.desktop"));
         for (const QString &file : fileNames) {
+            if (seen.contains(file))
+                continue;
+            seen.insert(file);
+
             QSettings desktop(d.absoluteFilePath(file), QSettings::IniFormat);
 
             desktop.beginGroup("Desktop Entry");
+
+            // Turned off (Settings > Startup writes Hidden=true into the user copy)
+            if (desktop.value("Hidden").toString() == QLatin1String("true")
+                || desktop.value("X-GNOME-Autostart-enabled").toString() == QLatin1String("false"))
+                continue;
+
+            const QString tryExec = desktop.value("TryExec").toString();
+            if (!tryExec.isEmpty() && QStandardPaths::findExecutable(tryExec).isEmpty()
+                && !QFileInfo(tryExec).isExecutable())
+                continue;
 
             // Ignore files the require a specific desktop environment
             // QSettings reads ';' as a comment, which would cut "GNOME;Lingmo;" down to
@@ -239,6 +257,10 @@ void ProcessManager::loadAutoStartProcess()
 
             // 使用 QProcess::splitCommand 来解析命令和参数
             QStringList args = QProcess::splitCommand(execValue);
+            // Desktop entry field codes (%U, %f, ...) have no files to expand to here
+            args.removeIf([](const QString &arg) {
+                return arg.size() == 2 && arg.startsWith(QLatin1Char('%'));
+            });
 
             // 检查是否至少有一个元素（即程序路径）
             if (!args.isEmpty()) {
