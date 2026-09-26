@@ -1,7 +1,8 @@
 #!/bin/sh
 # Reloads the Lingmo desktop UI without logging out (Meta+R).
 # lingmo-session restarts each component it supervises as soon as it exits.
-#   lingmo-reload          restart bar, dock, launcher and shortcuts; reload KWin's config
+#   lingmo-reload          restart bar, dock, launcher, notifications and shortcuts;
+#                          reload KWin's config
 #   lingmo-reload --full   also restart KWin itself
 
 # Tells lingmo-session these exits are wanted, so it restarts the components right
@@ -11,7 +12,7 @@ touch "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/lingmo-reload-$DISPLAY"
 # Only touch this session's processes (same display): another session of the same
 # user (a nested test session, a second seat) is left alone.
 # pgrep -x matches the process name, which the kernel truncates to 15 characters.
-for comm in lingmo-statusba lingmo-dock lingmo-launcher lingmo-chotkeys; do
+for comm in lingmo-statusba lingmo-dock lingmo-launcher lingmo-notifica lingmo-chotkeys; do
     for pid in $(pgrep -u "$(id -u)" -x "$comm"); do
         tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -qx "DISPLAY=$DISPLAY" && kill "$pid"
     done
