@@ -346,6 +346,70 @@ void Application::initKWinConfig()
         repairKWinShortcuts();
         settings.setValue("Lingmo/ShortcutsRepairVersion", kShortcutsRepairVersion);
     }
+
+    // Lingmo's window shortcuts on the Meta key (maximize, minimize, close, ...)
+    constexpr int kWindowShortcutsVersion = 1;
+    if (settings.value("Lingmo/WindowShortcutsVersion", 0).toInt() < kWindowShortcutsVersion) {
+        applyWindowShortcuts();
+        settings.setValue("Lingmo/WindowShortcutsVersion", kWindowShortcutsVersion);
+    }
+}
+
+void Application::applyWindowShortcuts()
+{
+    // KWin action, Lingmo keys, KWin's default keys, description. Written only when
+    // the action still has KWin's default (or no) keys, so the user's own choices stay.
+    struct Shortcut { const char *action; const char *keys; const char *kwinDefault; const char *text; };
+    static const Shortcut shortcuts[] = {
+        {"Window Maximize", "Meta+Up\\tMeta+PgUp", "Meta+PgUp", "Maximize Window"},
+        {"Window Minimize", "Meta+Down\\tMeta+PgDown", "Meta+PgDown", "Minimize Window"},
+        {"Window Quick Tile Top", "none", "Meta+Up", "Quick Tile Window to the Top"},
+        {"Window Quick Tile Bottom", "none", "Meta+Down", "Quick Tile Window to the Bottom"},
+        {"Window Close", "Alt+F4\\tMeta+Q", "Alt+F4", "Close Window"},
+        {"Window Fullscreen", "Meta+F", "none", "Make Window Fullscreen"},
+    };
+
+    // Plain text on purpose: QSettings would rewrite the tab/comma separated values
+    QFile file(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/kglobalshortcutsrc");
+    QStringList lines;
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        lines = QString::fromUtf8(file.readAll()).split('\n');
+        file.close();
+    }
+
+    int groupStart = lines.indexOf(QStringLiteral("[kwin]"));
+    if (groupStart < 0) {
+        if (!lines.isEmpty() && !lines.last().isEmpty())
+            lines << QString();
+        lines << QStringLiteral("[kwin]");
+        groupStart = lines.size() - 1;
+    }
+    int groupEnd = groupStart + 1;
+    while (groupEnd < lines.size() && !lines.at(groupEnd).startsWith('['))
+        ++groupEnd;
+
+    for (const Shortcut &shortcut : shortcuts) {
+        const QString key = QString::fromLatin1(shortcut.action) + '=';
+        const QString entry = key + QString::fromLatin1("%1,%2,%3").arg(shortcut.keys, shortcut.kwinDefault, shortcut.text);
+
+        int at = -1;
+        for (int i = groupStart + 1; i < groupEnd; ++i) {
+            if (lines.at(i).startsWith(key)) {
+                at = i;
+                break;
+            }
+        }
+        if (at < 0) {
+            lines.insert(groupEnd++, entry);
+            continue;
+        }
+        const QString active = lines.at(at).mid(key.size()).section(',', 0, 0);
+        if (active == QLatin1String("none") || active == QLatin1String(shortcut.kwinDefault))
+            lines[at] = entry;
+    }
+
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+        file.write(lines.join('\n').toUtf8());
 }
 
 void Application::repairKWinShortcuts()

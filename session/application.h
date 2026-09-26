@@ -75,6 +75,7 @@ private:
     void initXResource();
     void initKWinConfig();
     void repairKWinShortcuts();
+    void applyWindowShortcuts();
     bool syncDBusEnvironment();
     void importSystemdEnvrionment();
     void createConfigDirectory();
