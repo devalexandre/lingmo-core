@@ -68,6 +68,11 @@ public slots:
     void launch(const QString &exec, const QStringList &args);
     void launch(const QString &exec, const QString &workingDir, const QStringList &args);
 
+    // For callers that can't pass a string list (KWin scripts: the lock screen hot corner)
+    void lockScreen() {
+        launch(QStringLiteral("lingmo-screenlocker"), QStringList());
+    }
+
 private:
     void initEnvironments();
     void initLanguage();
