@@ -32,6 +32,10 @@ file (GLOB_RECURSE SRCS
   "touchpad/*.cpp"
   "touchpad/x11/*.h"
   "touchpad/x11/*.cpp"
+  "nightlight/*.h"
+  "nightlight/*.cpp"
+  "keyboard/*.h"
+  "keyboard/*.cpp"
 )
 
 set(SOURCES ${SRCS})
@@ -60,6 +64,12 @@ qt6_add_dbus_adaptor(DBUS_SOURCES
 qt6_add_dbus_adaptor(DBUS_SOURCES
                      touchpad/com.lingmo.Touchpad.xml
                      touchpad/touchpadmanager.h TouchpadManager)
+qt6_add_dbus_adaptor(DBUS_SOURCES
+                     nightlight/com.lingmo.NightLight.xml
+                     nightlight/nightlight.h NightLight)
+qt6_add_dbus_adaptor(DBUS_SOURCES
+                     keyboard/com.lingmo.Keyboard.xml
+                     keyboard/keyboard.h Keyboard)
 set_source_files_properties(${DBUS_SOURCES} PROPERTIES SKIP_AUTOGEN ON)
 
 add_executable(${TARGET} ${SOURCES} ${DBUS_SOURCES} ${HEADERS} ${FORMS} ${RESOURCES})
@@ -83,6 +93,8 @@ target_link_libraries(${TARGET}
         X11::Xi
         X11::XCB
         ${XCB_LIBRARIES}
+        XCB::RANDR
+        XCB::XKB
         PkgConfig::XORGLIBINPUT
         PkgConfig::XORGSERVER
         PkgConfig::SYNAPTICS

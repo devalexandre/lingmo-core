@@ -1,0 +1,43 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="com.lingmo.NightLight">
+    <method name="setEnabled">
+        <arg name="enabled" type="b" direction="in"/>
+    </method>
+    <method name="setTemperature">
+        <arg name="temperature" type="i" direction="in"/>
+    </method>
+    <method name="setMode">
+        <arg name="mode" type="i" direction="in"/>
+    </method>
+    <method name="setSchedule">
+        <arg name="startTime" type="s" direction="in"/>
+        <arg name="endTime" type="s" direction="in"/>
+    </method>
+    <method name="toggle"></method>
+
+    <property name="enabled" type="b" access="read"/>
+    <property name="temperature" type="i" access="read"/>
+    <property name="minTemperature" type="i" access="read"/>
+    <property name="maxTemperature" type="i" access="read"/>
+    <property name="mode" type="i" access="read"/>
+    <property name="startTime" type="s" access="read"/>
+    <property name="endTime" type="s" access="read"/>
+    <property name="active" type="b" access="read"/>
+    <property name="supported" type="b" access="read"/>
+
+    <signal name="enabledChanged">
+        <arg type="b"/>
+    </signal>
+    <signal name="temperatureChanged">
+        <arg type="i"/>
+    </signal>
+    <signal name="modeChanged">
+        <arg type="i"/>
+    </signal>
+    <signal name="scheduleChanged"></signal>
+    <signal name="activeChanged">
+        <arg type="b"/>
+    </signal>
+  </interface>
+</node>

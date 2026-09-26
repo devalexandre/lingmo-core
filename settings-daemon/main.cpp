@@ -19,9 +19,40 @@
 
 #include "application.h"
 
+#include <QSocketNotifier>
+
+#include <signal.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+static int s_signalFd[2];
+
+static void quitOnSignal(int)
+{
+    char c = 1;
+    ssize_t n = ::write(s_signalFd[0], &c, sizeof(c));
+    Q_UNUSED(n);
+}
+
 int main(int argc, char *argv[])
 {
     Application a(argc, argv);
     a.setQuitOnLastWindowClosed(false);
+
+    // The session stops us with SIGTERM: quit cleanly so modules can undo
+    // what they did to the X server (night light gamma ramps)
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, s_signalFd) == 0) {
+        QSocketNotifier *notifier = new QSocketNotifier(s_signalFd[1], QSocketNotifier::Read, &a);
+        QObject::connect(notifier, &QSocketNotifier::activated, &a, &QCoreApplication::quit);
+
+        struct sigaction action = {};
+        action.sa_handler = quitOnSignal;
+        sigemptyset(&action.sa_mask);
+        action.sa_flags = SA_RESTART;
+        sigaction(SIGTERM, &action, nullptr);
+        sigaction(SIGINT, &action, nullptr);
+        sigaction(SIGHUP, &action, nullptr);
+    }
+
     return a.exec();
 }

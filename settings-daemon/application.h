@@ -27,6 +27,8 @@
 #include "language/language.h"
 #include "mouse/mousemanager.h"
 #include "touchpad/touchpadmanager.h"
+#include "nightlight/nightlight.h"
+#include "keyboard/keyboard.h"
 #include "defaultapplications.h"
 
 #include <QTimer>
@@ -49,6 +51,8 @@ private:
     Mouse *m_mouse;
     TouchpadManager *m_touchpad;
     DefaultApplications *m_defaultApps;
+    NightLight *m_nightLight;
+    Keyboard *m_keyboard;
 
 };
 

@@ -45,8 +45,13 @@ Application::Application(int &argc, char **argv)
     , m_mouse(new Mouse)
     , m_touchpad(new TouchpadManager)
     , m_defaultApps(new DefaultApplications)
+    , m_nightLight(new NightLight(this))
+    , m_keyboard(new Keyboard(this))
 {
     initTrash();
+
+    // Leave the screens untinted when the session ends
+    connect(this, &QCoreApplication::aboutToQuit, m_nightLight, &NightLight::restore);
 
     new DBusAdaptor(this);
     // connect to D-Bus and register as an object:

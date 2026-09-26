@@ -1,0 +1,27 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="com.lingmo.Keyboard">
+    <method name="setLayouts">
+        <arg name="layouts" type="as" direction="in"/>
+    </method>
+    <method name="setSwitchOption">
+        <arg name="option" type="s" direction="in"/>
+    </method>
+    <method name="setCurrentIndex">
+        <arg name="index" type="i" direction="in"/>
+    </method>
+    <method name="nextLayout"></method>
+
+    <property name="layouts" type="as" access="read"/>
+    <property name="shortNames" type="as" access="read"/>
+    <property name="descriptions" type="as" access="read"/>
+    <property name="switchOption" type="s" access="read"/>
+    <property name="currentIndex" type="i" access="read"/>
+
+    <signal name="layoutsChanged"></signal>
+    <signal name="switchOptionChanged"></signal>
+    <signal name="currentIndexChanged">
+        <arg type="i"/>
+    </signal>
+  </interface>
+</node>
