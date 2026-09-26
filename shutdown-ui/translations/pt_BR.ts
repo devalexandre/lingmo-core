@@ -4,27 +4,27 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../main.qml" line="240"/>
+        <location filename="../main.qml" line="+240"/>
         <source>Shutdown</source>
         <translation>Desligar</translation>
     </message>
     <message>
-        <location filename="../main.qml" line="248"/>
+        <location line="+8"/>
         <source>Reboot</source>
         <translation>Reiniciar</translation>
     </message>
     <message>
-        <location filename="../main.qml" line="256"/>
+        <location line="+8"/>
         <source>Logout</source>
         <translation>Encerrar sessão</translation>
     </message>
     <message>
-        <location filename="../main.qml" line="264"/>
+        <location line="+8"/>
         <source>Lock screen</source>
-        <translation type="unfinished"></translation>
+        <translation>Bloquear tela</translation>
     </message>
     <message>
-        <location filename="../main.qml" line="272"/>
+        <location line="+8"/>
         <source>Suspend</source>
         <translation>Suspender</translation>
     </message>

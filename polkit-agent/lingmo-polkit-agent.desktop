@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=PolicyKit Handler
+Name[pt_BR]=Agente de autenticação do PolicyKit
 TryExec=lingmo-polkit-agent
 Exec=lingmo-polkit-agent
 NoDisplay=true

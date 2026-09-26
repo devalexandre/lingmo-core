@@ -4,108 +4,108 @@
 <context>
     <name>Battery</name>
     <message>
-        <location filename="../battery/battery.cpp" line="268"/>
+        <location filename="../battery/battery.cpp" line="+268"/>
         <source>%1d</source>
         <translation>%1d</translation>
     </message>
     <message>
-        <location filename="../battery/battery.cpp" line="274"/>
+        <location line="+6"/>
         <source>%1h</source>
         <translation>%1h</translation>
     </message>
     <message>
-        <location filename="../battery/battery.cpp" line="281"/>
+        <location line="+7"/>
         <source>%1m</source>
         <translation>%1m</translation>
     </message>
     <message>
-        <location filename="../battery/battery.cpp" line="290"/>
+        <location line="+9"/>
         <source>%1 until fully charged</source>
         <translation>%1 até a carga completa</translation>
     </message>
     <message>
-        <location filename="../battery/battery.cpp" line="292"/>
+        <location line="+2"/>
         <source>%1 remaining</source>
         <translation>%1 restante(s)</translation>
     </message>
     <message>
-        <location filename="../battery/battery.cpp" line="294"/>
+        <location line="+2"/>
         <source>Fully charged.</source>
         <translation>Carga completa.</translation>
     </message>
     <message>
-        <location filename="../battery/battery.cpp" line="317"/>
+        <location line="+23"/>
         <source>now</source>
         <translation>agora</translation>
     </message>
     <message>
-        <location filename="../battery/battery.cpp" line="319"/>
+        <location line="+2"/>
         <source>%1 ago</source>
-        <translation>%1 atrás</translation>
+        <translation>há %1</translation>
     </message>
 </context>
 <context>
     <name>Language</name>
     <message>
-        <location filename="../language/language.cpp" line="85"/>
+        <location filename="../language/language.cpp" line="+85"/>
         <source>The system language has been changed, please log out and log in</source>
-        <translation type="unfinished"></translation>
+        <translation>O idioma do sistema foi alterado. Encerre a sessão e entre novamente para aplicar</translation>
     </message>
 </context>
 <context>
     <name>ThemeManager</name>
     <message>
-        <location filename="../theme/thememanager.cpp" line="294"/>
+        <location filename="../theme/thememanager.cpp" line="+299"/>
         <source>Screen scaling needs to be re-login to take effect</source>
-        <translation type="unfinished"></translation>
+        <translation>A escala da tela só terá efeito depois que você encerrar a sessão e entrar novamente</translation>
     </message>
 </context>
 <context>
     <name>UPowerDevice</name>
     <message>
-        <location filename="../battery/upowerdevice.cpp" line="71"/>
+        <location filename="../battery/upowerdevice.cpp" line="+71"/>
         <source>%1 Battery</source>
         <comment>%1 is battery technology</comment>
-        <translation>%1 Bateria</translation>
+        <translation>Bateria de %1</translation>
     </message>
     <message>
-        <location filename="../battery/upowerdevice.cpp" line="87"/>
+        <location line="+16"/>
         <source>Lithium-ion</source>
         <comment>battery technology</comment>
-        <translation>Íon de Lítio</translation>
+        <translation>íon de lítio</translation>
     </message>
     <message>
-        <location filename="../battery/upowerdevice.cpp" line="89"/>
+        <location line="+2"/>
         <source>Lithium Polymer</source>
         <comment>battery technology</comment>
-        <translation>Polímero de Lítio</translation>
+        <translation>polímero de lítio</translation>
     </message>
     <message>
-        <location filename="../battery/upowerdevice.cpp" line="91"/>
+        <location line="+2"/>
         <source>Lithium Iron Phosphate</source>
         <comment>battery technology</comment>
-        <translation>Fosfato de Ferrolítio</translation>
+        <translation>fosfato de ferro-lítio</translation>
     </message>
     <message>
-        <location filename="../battery/upowerdevice.cpp" line="93"/>
+        <location line="+2"/>
         <source>Lead Acid</source>
         <comment>battery technology</comment>
-        <translation>Chumbo Ácido</translation>
+        <translation>chumbo-ácido</translation>
     </message>
     <message>
-        <location filename="../battery/upowerdevice.cpp" line="95"/>
+        <location line="+2"/>
         <source>Nickel Cadmium</source>
         <comment>battery technology</comment>
-        <translation>Níquel Cádmio</translation>
+        <translation>níquel-cádmio</translation>
     </message>
     <message>
-        <location filename="../battery/upowerdevice.cpp" line="97"/>
+        <location line="+2"/>
         <source>Nickel Metal Hydride</source>
         <comment>battery technology</comment>
-        <translation>Níquel-Hidreto Metálico</translation>
+        <translation>níquel-hidreto metálico</translation>
     </message>
     <message>
-        <location filename="../battery/upowerdevice.cpp" line="99"/>
+        <location line="+2"/>
         <source>Unknown</source>
         <comment>battery technology</comment>
         <translation>Desconhecido</translation>
