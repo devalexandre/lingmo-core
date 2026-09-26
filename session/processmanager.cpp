@@ -16,6 +16,7 @@
 #include <QThread>
 #include <QDir>
 #include <QSet>
+#include <QProcess>
 
 #include <QDBusInterface>
 #include <QDBusPendingCall>
@@ -52,9 +53,26 @@ ProcessManager::~ProcessManager()
 
 void ProcessManager::start()
 {
+    applyScreenLayout();
     startGlobalShortcuts();
     startWindowManager();
     startDaemonProcess();
+}
+
+void ProcessManager::applyScreenLayout()
+{
+    // Monitor positions, rotation and primary set in Settings > Display: an xrandr
+    // script, run before the window manager and the panels so they start on the
+    // right monitors
+    const QString script = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
+                           + QStringLiteral("/lingmoos/screenlayout.sh");
+    if (!QFileInfo::exists(script))
+        return;
+
+    QProcess xrandr;
+    xrandr.start(QStringLiteral("/bin/sh"), {script});
+    if (!xrandr.waitForFinished(5000))
+        qWarning() << "screen layout script took too long:" << script;
 }
 
 void ProcessManager::startGlobalShortcuts()

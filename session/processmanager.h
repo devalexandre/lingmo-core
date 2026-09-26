@@ -42,6 +42,7 @@ public:
     void start();
     void logout();
 
+    void applyScreenLayout();
     void startGlobalShortcuts();
     void startWindowManager();
     void startDesktopProcess();
