@@ -18,13 +18,52 @@
  */
 
 #include <QApplication>
-#include "clipboard.h"
+#include <QCommandLineParser>
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
+#include <QDBusMessage>
+#include <QFile>
+#include <QLocale>
+#include <QStandardPaths>
+#include <QTranslator>
+
+#include "application.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    a.setQuitOnLastWindowClosed(false);
 
-    Clipboard clipboard;
+    QCommandLineParser parser;
+    QCommandLineOption historyOption(QStringLiteral("history"), QStringLiteral("Show the clipboard history"));
+    parser.addOption(historyOption);
+    parser.addHelpOption();
+    parser.process(a);
+
+    // One per session: a second start (Super+V runs "lingmo-clipboard --history")
+    // just asks the running one
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    if (!bus.registerService(QStringLiteral("com.lingmo.Clipboard"))) {
+        if (parser.isSet(historyOption)) {
+            bus.call(QDBusMessage::createMethodCall(QStringLiteral("com.lingmo.Clipboard"), QStringLiteral("/Clipboard"),
+                                                    QStringLiteral("com.lingmo.Clipboard"), QStringLiteral("showHistory")));
+        }
+        return 0;
+    }
+
+    const QString qmFilePath = QStandardPaths::locate(QStandardPaths::GenericDataLocation,
+                                                      QStringLiteral("lingmo-clipboard/translations/%1.qm").arg(QLocale().name()));
+    if (!qmFilePath.isEmpty()) {
+        QTranslator *translator = new QTranslator(&a);
+        if (translator->load(qmFilePath))
+            a.installTranslator(translator);
+        else
+            delete translator;
+    }
+
+    Application application;
+    if (parser.isSet(historyOption))
+        application.showHistory();
 
     return a.exec();
 }

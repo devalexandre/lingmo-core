@@ -76,6 +76,7 @@ void Application::initSetting()
     static const QList<QStringList> lateDefaults = {
         {"Meta+Space", "Spotlight", "lingmo-spotlight"},
         {"Meta+R", "Reload desktop", "lingmo-reload"},
+        {"Meta+V", "Clipboard history", "lingmo-clipboard --history"},
     };
     for (const QStringList &shortcut : lateDefaults) {
         bool bound = setting.childGroups().contains(shortcut[0]);

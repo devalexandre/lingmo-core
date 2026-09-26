@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2023-2024 LingmoOS Team.
+ * Copyright (C) 2026 LingmoOS Team.
  *
- * Author:     Kate Leet <kate@lingmoos.com>
+ * Author:     devalexandre <alexandre@dev2learn.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,41 +17,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CLIPBOARD_H
-#define CLIPBOARD_H
+#ifndef APPLICATION_H
+#define APPLICATION_H
 
 #include <QObject>
-#include <QClipboard>
 
-class HistoryModel;
+class Clipboard;
+class HistoryWindow;
 
-class Clipboard : public QObject
+// com.lingmo.Clipboard on the session bus (/Clipboard)
+class Application : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool historyEnabled READ historyEnabled WRITE setHistoryEnabled NOTIFY historyEnabledChanged)
+    Q_PROPERTY(bool historyEnabled READ historyEnabled WRITE setHistoryEnabled)
 
 public:
-    explicit Clipboard(QObject *parent = nullptr);
+    explicit Application(QObject *parent = nullptr);
 
-    HistoryModel *history() const;
-
-    // Puts a history item back on the clipboard
-    Q_INVOKABLE void restore(int row);
-
-    // Settings > "Clipboard history": off also forgets what was recorded
     bool historyEnabled() const;
     void setHistoryEnabled(bool enabled);
 
-signals:
-    void historyEnabledChanged();
-
-private slots:
-    void onDataChanged();
+public slots:
+    void showHistory();
+    void hideHistory();
+    void clearHistory();
 
 private:
-    QClipboard *m_qtClipboard;
-    HistoryModel *m_history;
-    bool m_historyEnabled;
+    Clipboard *m_clipboard;
+    HistoryWindow *m_window;
 };
 
-#endif // CLIPBOARD_H
+#endif // APPLICATION_H
