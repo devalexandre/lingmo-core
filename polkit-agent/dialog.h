@@ -25,6 +25,8 @@
 #include <QVariant>
 #include <QQuickView>
 
+class QQmlContext;
+
 #include <PolkitQt1/Agent/Listener>
 
 class Dialog : public QObject
@@ -38,11 +40,24 @@ public:
                     PolkitQt1::Agent::AsyncResult *result);
     ~Dialog();
 
+    // Loads the dialog's QML once, when the agent starts. Every request reuses that
+    // engine and compiled component: QML read from disk later, after a package update
+    // replaced it under the running agent, could mismatch the libraries already in
+    // memory and crash the agent (leaving the session without password prompts).
+    static void preload();
+
     Q_INVOKABLE void setConfirmationResult(const QString &password = QString());
     Q_INVOKABLE void rejected();
     Q_INVOKABLE void show();
 
     Q_INVOKABLE void authenticationFailure();
+
+    // A PAM info or error message for the user
+    void showMessage(const QString &text, bool error);
+
+    // pam_fprintd was put first in the polkit-1 stack by lingmo-settings
+    Q_PROPERTY(bool fingerprint READ fingerprint CONSTANT)
+    bool fingerprint() const;
 
     Q_PROPERTY(QString message READ message NOTIFY changed)
     Q_PROPERTY(QString action READ action NOTIFY changed)
@@ -66,6 +81,7 @@ signals:
     void changed();
 
     void failure();
+    void message(const QString &text, bool error);
 
     void cancel();
     void accepted();
@@ -81,6 +97,7 @@ private:
     PolkitQt1::Agent::AsyncResult *m_result;
 
     QQuickView *m_view;
+    QQmlContext *m_context = nullptr;
 };
 
 #endif // DIALOG_H

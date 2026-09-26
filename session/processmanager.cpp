@@ -204,6 +204,9 @@ void ProcessManager::startDaemonProcess()
     list << qMakePair(QString("lingmo-gmenuproxy"), QStringList());
 //    list << qMakePair(QString("lingmo-clipboard"), QStringList());
     list << qMakePair(QString("lingmo-chotkeys"), QStringList());
+    // Password prompts for pkexec and apps asking for admin rights: restarted if it
+    // ever dies, or the session is left unable to authorize anything until logout
+    list << qMakePair(QString("lingmo-polkit-agent"), QStringList());
 
     m_daemonAutoStartD = std::make_shared<LINGMO_SESSION::Daemon>(list);
 }

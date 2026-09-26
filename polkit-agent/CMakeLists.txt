@@ -44,10 +44,7 @@ install(TARGETS lingmo-polkit-agent
     COMPONENT Runtime
 )
 
-install(FILES
-lingmo-polkit-agent.desktop
-    DESTINATION "${CMAKE_INSTALL_FULL_SYSCONFDIR}/xdg/autostart"
-    COMPONENT Runtime
-)
+# No autostart entry: lingmo-session starts the agent itself and restarts it if it
+# ever dies (see ProcessManager::startDaemonProcess)
 
 install(FILES ${QM_FILES} DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/lingmo-polkit-agent/translations)

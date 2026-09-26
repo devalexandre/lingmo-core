@@ -20,9 +20,36 @@
 #include "dialog.h"
 
 #include <QGuiApplication>
+#include <QQmlComponent>
 #include <QQmlContext>
+#include <QQmlEngine>
 #include <QScreen>
 #include <QDebug>
+#include <QFile>
+
+namespace {
+const QUrl DialogUrl(QStringLiteral("qrc:/main.qml"));
+
+QQmlEngine *sharedEngine()
+{
+    static QQmlEngine *engine = new QQmlEngine(QGuiApplication::instance());
+    return engine;
+}
+
+QQmlComponent *dialogComponent()
+{
+    static QQmlComponent *component = new QQmlComponent(sharedEngine(), DialogUrl,
+                                                        QQmlComponent::PreferSynchronous,
+                                                        QGuiApplication::instance());
+    return component;
+}
+}
+
+void Dialog::preload()
+{
+    if (dialogComponent()->isError())
+        qWarning() << dialogComponent()->errors();
+}
 
 Dialog::Dialog(const QString &action, const QString &message,
                const QString &cookie, const QString &identity,
@@ -35,17 +62,23 @@ Dialog::Dialog(const QString &action, const QString &message,
     , m_password(QString())
     , m_iconName(iconName)
     , m_result(result)
-    , m_view(new QQuickView)
+    , m_view(new QQuickView(sharedEngine(), nullptr))
 {
     qDebug() << "Creating ConfirmationDialog";
 
     m_view->setFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
-    m_view->rootContext()->setContextProperty("confirmation", this);
-    m_view->rootContext()->setContextProperty("rootWindow", m_view);
     m_view->setResizeMode(QQuickView::SizeViewToRootObject);
     m_view->setDefaultAlphaBuffer(true);
     m_view->setColor(Qt::transparent);
-    m_view->setSource(QUrl(QStringLiteral("qrc:/main.qml")));
+
+    // This request's own context on the shared engine
+    m_context = new QQmlContext(sharedEngine(), this);
+    m_context->setContextProperty("confirmation", this);
+    m_context->setContextProperty("rootWindow", m_view);
+    QObject *root = dialogComponent()->create(m_context);
+    if (!root)
+        qWarning() << dialogComponent()->errors();
+    m_view->setContent(DialogUrl, dialogComponent(), root);
     m_view->setVisible(false);
 }
 
@@ -79,4 +112,15 @@ void Dialog::show()
 void Dialog::authenticationFailure()
 {
     emit failure();
+}
+
+void Dialog::showMessage(const QString &text, bool error)
+{
+    emit message(text.trimmed(), error);
+}
+
+bool Dialog::fingerprint() const
+{
+    // Written by lingmo-settings' fingerprint-pam helper
+    return QFile::exists(QStringLiteral("/etc/lingmo-fingerprint-enabled"));
 }

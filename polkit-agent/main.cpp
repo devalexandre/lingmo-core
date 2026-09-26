@@ -24,6 +24,7 @@
 #include <QTranslator>
 
 #include "polkitagentlistener.h"
+#include "dialog.h"
 
 int main(int argc, char *argv[])
 {
@@ -41,6 +42,8 @@ int main(int argc, char *argv[])
             translator->deleteLater();
         }
     }
+
+    Dialog::preload();
 
     PolKitAgentListener listener;
     PolkitQt1::UnixSessionSubject session(getpid());
