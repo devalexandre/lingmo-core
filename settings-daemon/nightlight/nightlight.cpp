@@ -302,8 +302,11 @@ void NightLight::updateCrtcs()
             ramp.green = QVector<uint16_t>(green, green + gamma->size);
             ramp.blue = QVector<uint16_t>(blue, blue + gamma->size);
 
-            // Some servers report an empty (all zero) ramp: start from linear then
-            if (ramp.red.last() == 0 && ramp.green.last() == 0 && ramp.blue.last() == 0) {
+            // Some servers report an empty (all zero) ramp: start from linear then.
+            // Same when a previous run died while tinting (the "Tinted" mark is still
+            // set): the ramp on screen is ours, not the original one.
+            const bool leftTinted = m_settings.value("Tinted", false).toBool();
+            if (leftTinted || (ramp.red.last() == 0 && ramp.green.last() == 0 && ramp.blue.last() == 0)) {
                 for (int j = 0; j < gamma->size; ++j)
                     ramp.red[j] = ramp.green[j] = ramp.blue[j] = uint16_t(j * 65535.0 / qMax(1, gamma->size - 1));
             }
@@ -341,6 +344,11 @@ void NightLight::apply(double kelvin)
 
     xcb_flush(m_connection);
     m_current = kelvin;
+    if (!m_tinted) {
+        // Survives a crash: the next start then won't take the tinted ramp as original
+        m_settings.setValue("Tinted", true);
+        m_settings.sync();
+    }
     m_tinted = true;
 }
 
@@ -358,4 +366,6 @@ void NightLight::restore()
     xcb_flush(m_connection);
     m_current = s_maxTemperature;
     m_tinted = false;
+    m_settings.setValue("Tinted", false);
+    m_settings.sync();
 }
