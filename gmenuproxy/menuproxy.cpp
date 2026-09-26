@@ -229,7 +229,8 @@ void MenuProxy::writeGtk3Settings()
     QSettings cfg(gtk3SettingsIniPath(), QSettings::IniFormat);
     cfg.beginGroup(QStringLiteral("Settings"));
 
-    QStringList gtkModules = cfg.value(QStringLiteral("gtk-modules")).toString().split(QLatin1Char(':'));
+    // no module set yet: splitting "" would leave an empty entry (":appmenu-gtk-module")
+    QStringList gtkModules = cfg.value(QStringLiteral("gtk-modules")).toString().split(QLatin1Char(':'), Qt::SkipEmptyParts);
     addOrRemoveAppMenuGtkModule(gtkModules);
 
     if (!gtkModules.isEmpty()) {

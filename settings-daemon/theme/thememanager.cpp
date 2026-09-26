@@ -453,7 +453,19 @@ void ThemeManager::setBackgroundColor(QString color)
 void ThemeManager::updateGtk3Config()
 {
     QSettings settings(gtk3SettingsIniPath(), QSettings::IniFormat);
+
+    // lingmo-gmenuproxy owns these (global menu for GTK 3 apps): keep them across the rewrite
+    static const QStringList preservedKeys = {QStringLiteral("Settings/gtk-modules"),
+                                              QStringLiteral("Settings/gtk-shell-shows-menubar")};
+    QVariantMap preserved;
+    for (const QString &key : preservedKeys) {
+        if (settings.contains(key))
+            preserved.insert(key, settings.value(key));
+    }
+
     settings.clear();
+    for (auto it = preserved.constBegin(); it != preserved.constEnd(); ++it)
+        settings.setValue(it.key(), it.value());
     settings.beginGroup("Settings");
 
     // font
