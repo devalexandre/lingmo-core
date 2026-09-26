@@ -8,6 +8,7 @@ set(SRCS main.cpp
          notificationpopup.cpp
          notificationwindow.cpp
          historymodel.cpp
+         appactivator.cpp
          settings.cpp
          utils.cpp
          dbus/notificationsadaptor.cpp
@@ -29,7 +30,7 @@ foreach(filepath ${TS_FILES})
     string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" filename ${filepath})
     list(APPEND ts_files_replaced ${filename})
 endforeach()
-qt6_create_translation(QM_FILES ${CMAKE_CURRENT_SOURCE_DIR} ${ts_files_replaced})
+qt_add_translation(QM_FILES ${ts_files_replaced})
 
 target_link_libraries(lingmo-notificationd
     Qt6::Core

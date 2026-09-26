@@ -78,7 +78,12 @@ ThemeManager::ThemeManager(QObject *parent)
     m_Color5 = m_settings->value("Color5", "#FEA042").toString();
     m_Color6 = m_settings->value("Color6", "#4F596B").toString();
 
-    m_wallpaperPath = m_settings->value("Wallpaper", "/usr/share/backgrounds/lingmoos/default.jpg").toString();
+    // ArchLingmo wallpaper (lingmo-artwork) when installed, upstream default otherwise
+    const QString archLingmoWallpaper = QStringLiteral("/usr/share/backgrounds/lingmoos/lingmo-arch-monterey-4k.png");
+    const QString defaultWallpaper = QFile::exists(archLingmoWallpaper)
+            ? archLingmoWallpaper
+            : QStringLiteral("/usr/share/backgrounds/lingmoos/default.jpg");
+    m_wallpaperPath = m_settings->value("Wallpaper", defaultWallpaper).toString();
     m_accentColor = m_settings->value("AccentColor", 0).toInt();
     m_backgroundType = m_settings->value("BackgroundType", 0).toInt();
     m_backgroundColor = m_settings->value("BackgroundColor", "#2B8ADA").toString();

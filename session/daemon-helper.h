@@ -9,6 +9,8 @@
 #include <QString>
 #include <QStringList>
 #include <QList>
+#include <QHash>
+#include <QElapsedTimer>
 
 namespace LINGMO_SESSION {
   class Daemon : public QObject {
@@ -39,6 +41,13 @@ namespace LINGMO_SESSION {
     void startProcess(const QPair<QString, QStringList>& processInfo);
 
     QList<QPair<QString, QStringList>> m_processList;
+
+    /**
+     * @brief Consecutive restarts per program, and how long each has been up.
+     * Used to back off and eventually give up on programs that keep failing.
+     */
+    QHash<QString, int> m_restartCount;
+    QHash<QString, QElapsedTimer> m_uptime;
 
     /**
      * @brief Whether to enable auto reload when process exited.

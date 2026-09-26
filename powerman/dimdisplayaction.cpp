@@ -37,7 +37,10 @@ DimDisplayAction::DimDisplayAction(QObject *parent)
 {
     if (QX11Info::isPlatformX11()) {
         // Disable a default timeout, if any
-        xcb_dpms_set_timeouts(QX11Info::connection(), 0, 0, 0);
+        // Using DPMS on a server without it (Xephyr, some VMs) kills the xcb connection
+        const xcb_query_extension_reply_t *dpms = xcb_get_extension_data(QX11Info::connection(), &xcb_dpms_id);
+        if (dpms && dpms->present)
+            xcb_dpms_set_timeouts(QX11Info::connection(), 0, 0, 0);
 
         XSetScreenSaver(QX11Info::display(), 0, 0, 0, 0);
     }

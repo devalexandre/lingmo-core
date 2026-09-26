@@ -35,6 +35,9 @@ public:
     QString appIcon;
     QStringList actions;
     int timeout = -1;
+    // Not saved in the history: only meaningful while the sender runs
+    uint pid = 0;
+    QString desktopEntry;
 
     QDateTime created;
     QDateTime updated;

@@ -8,6 +8,7 @@ set(PROJECT_SOURCES
     main.cpp
     application.cpp
     hotkeys.cpp
+    metatap.cpp
     QHotkey/qhotkey.cpp
     QHotkey/qhotkey_x11.cpp
 )
@@ -24,6 +25,7 @@ target_link_libraries(lingmo-chotkeys
     Qt6::GuiPrivate
     ${XCB_LIBS}
     ${X11_LIBRARIES}
+    ${X11_Xi_LIB}
     XCB::KEYSYMS
 )
 

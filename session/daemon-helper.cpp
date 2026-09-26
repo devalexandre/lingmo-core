@@ -1,3 +1,6 @@
+#include <QStandardPaths>
+#include <QFileInfo>
+#include <QDateTime>
 /**
  * @name daemon-helper.cpp
  * @author Elysia <c.elysia@foxmail.com>
@@ -20,6 +23,18 @@ Daemon::Daemon(const QList<QPair<QString, QStringList>> &processList, bool _enab
   }
 }
 
+// lingmo-reload touches $XDG_RUNTIME_DIR/lingmo-reload-<display> right before it stops
+// the desktop components of that session
+static bool reloadRequested() {
+  const QString runtimeDir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
+  const QFileInfo stamp(runtimeDir + "/lingmo-reload-" + QString::fromLocal8Bit(qgetenv("DISPLAY")));
+  return stamp.exists() && stamp.lastModified().secsTo(QDateTime::currentDateTime()) <= 10;
+}
+
+// A process that stays up this long is considered healthy again.
+static constexpr qint64 kStableUptimeMs = 30 * 1000;
+static constexpr int kMaxRestarts = 5;
+
 void Daemon::onProcessError(QProcess::ProcessError error) {
   const QPointer process = qobject_cast<QProcess *>(sender());
 
@@ -28,13 +43,35 @@ void Daemon::onProcessError(QProcess::ProcessError error) {
 
   QString program = process->program();
   qDebug() << "Process error:" << program << "Error:" << error;
+  process->deleteLater();
 
   for (const auto &processInfo : m_processList) {
     if (processInfo.first == program) {
-      qDebug() << "Restarting process due to error:" << program;
-      QTimer::singleShot(1, this, [this, processInfo]() {
+      // lingmo-reload stops components on purpose: bring them straight back and
+      // don't count it as a failure
+      if (reloadRequested()) {
+        m_restartCount[program] = 0;
+        QTimer::singleShot(300, this, [this, processInfo]() {
+          startProcess(processInfo);
+        });
+        return;
+      }
+
+      if (m_uptime.value(program).isValid() && m_uptime.value(program).elapsed() > kStableUptimeMs)
+        m_restartCount[program] = 0;
+
+      const int attempt = ++m_restartCount[program];
+      if (attempt > kMaxRestarts) {
+        qWarning() << "Giving up on" << program << "after" << kMaxRestarts << "failed restarts";
+        return;
+      }
+
+      // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+      const int delayMs = 1000 << (attempt - 1);
+      qDebug() << "Restarting process due to error:" << program << "in" << delayMs << "ms";
+      QTimer::singleShot(delayMs, this, [this, processInfo]() {
         startProcess(processInfo);
-      }); // Restart after 1 second
+      });
       return;
     }
   }
@@ -47,7 +84,10 @@ void Daemon::startProcess(const QPair<QString, QStringList> &processInfo) {
     connect(process, &QProcess::errorOccurred,
             this, &Daemon::onProcessError);
 
+  // Let child output reach the session log (~/.xsession-errors) instead of being discarded
+  process->setProcessChannelMode(QProcess::ForwardedChannels);
   process->start(processInfo.first, processInfo.second);
+  m_uptime[processInfo.first].start();
   if (process->waitForStarted()) {
     qDebug() << "Process started:" << processInfo.first << "PID:" << process->processId();
   } else {

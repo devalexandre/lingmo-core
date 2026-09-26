@@ -5,6 +5,7 @@
 */
 
 #include "notificationsmodel.h"
+#include "appactivator.h"
 #include "historymodel.h"
 #include "notification.h"
 #include "settings.h"
@@ -147,6 +148,20 @@ void NotificationsModel::invokeDefaultAction(uint notificationId)
     }
 
     NotificationServer::self()->InvokeAction(notificationId, "default");
+}
+
+void NotificationsModel::activate(uint notificationId)
+{
+    const int row = rowOfNotification(notificationId);
+    if (row == -1)
+        return;
+
+    const Notification &notification = m_notifications.at(row);
+    if (notification.actions.contains("default")) {
+        NotificationServer::self()->InvokeAction(notificationId, "default");
+        return;
+    }
+    AppActivator::activate(notification.pid, {notification.desktopEntry, notification.appIcon, notification.appName});
 }
 
 int NotificationsModel::rowOfNotification(uint id) const

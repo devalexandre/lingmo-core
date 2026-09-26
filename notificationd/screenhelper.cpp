@@ -27,8 +27,15 @@ ScreenHelper::ScreenHelper(QObject *parent)
     connect(qGuiApp, &QGuiApplication::primaryScreenChanged, this, &ScreenHelper::screenGeometryChanged);
     connect(qGuiApp, &QGuiApplication::primaryScreenChanged, this, &ScreenHelper::availableScreenRectChanged);
 
-    connect(qApp->primaryScreen(), &QScreen::geometryChanged, this, &ScreenHelper::screenGeometryChanged);
-    connect(qApp->primaryScreen(), &QScreen::availableGeometryChanged, this, &ScreenHelper::availableScreenRectChanged);
+    // Track the geometry of whichever screen is primary now
+    auto follow = [this](QScreen *screen) {
+        for (QScreen *s : qApp->screens())
+            disconnect(s, nullptr, this, nullptr);
+        connect(screen, &QScreen::geometryChanged, this, &ScreenHelper::screenGeometryChanged);
+        connect(screen, &QScreen::availableGeometryChanged, this, &ScreenHelper::availableScreenRectChanged);
+    };
+    connect(qGuiApp, &QGuiApplication::primaryScreenChanged, this, follow);
+    follow(qApp->primaryScreen());
 }
 
 QRect ScreenHelper::screenGeometry() const

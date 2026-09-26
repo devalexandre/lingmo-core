@@ -40,4 +40,4 @@ add_subdirectory(chotkeys)
 
 install(FILES lingmo DESTINATION /etc/ COMPONENT Runtime)
 install(FILES Desktop/Lingmo DESTINATION /etc/Desktop/ COMPONENT Runtime)
-install(FILES wallpaper-color-pick/lingmo-wallpaper-color-pick DESTINATION "/usr/bin/")
+install(PROGRAMS wallpaper-color-pick/lingmo-wallpaper-color-pick DESTINATION ${CMAKE_INSTALL_BINDIR})

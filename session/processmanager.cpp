@@ -9,6 +9,7 @@
 #include <QStandardPaths>
 #include <QFileInfoList>
 #include <QFileInfo>
+#include <QFile>
 #include <QSettings>
 #include <QDebug>
 #include <QTimer>
@@ -17,6 +18,8 @@
 
 #include <QDBusInterface>
 #include <QDBusPendingCall>
+#include <QDBusConnectionInterface>
+#include <QDBusServiceWatcher>
 
 #include <QtGui/private/qtx11extras_p.h>
 #include <KWindowSystem>
@@ -48,8 +51,41 @@ ProcessManager::~ProcessManager()
 
 void ProcessManager::start()
 {
+    startGlobalShortcuts();
     startWindowManager();
     startDaemonProcess();
+}
+
+void ProcessManager::startGlobalShortcuts()
+{
+    // Global shortcuts server (alt-tab, KWin and lingmo-chotkeys shortcuts). Its
+    // autostart entry is OnlyShowIn=KDE, so the Lingmo session must start it, and
+    // before KWin: KWin hands its default shortcuts (Alt+Tab, Alt+F4, ...) over only
+    // when it registers them, so with no server running they end up with no key.
+    QString kglobalacceld;
+    for (const QString &path : {QStringLiteral("/usr/lib/kglobalacceld"),
+                                QStringLiteral("/usr/libexec/kglobalacceld"),
+                                QStringLiteral("/usr/lib/x86_64-linux-gnu/libexec/kglobalacceld")}) {
+        if (QFileInfo(path).isExecutable()) {
+            kglobalacceld = path;
+            break;
+        }
+    }
+    if (kglobalacceld.isEmpty())
+        return;
+
+    static const QString service = QStringLiteral("org.kde.kglobalaccel");
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    m_shortcutsD = std::make_shared<LINGMO_SESSION::Daemon>(
+        QList<QPair<QString, QStringList>>{qMakePair(kglobalacceld, QStringList())});
+
+    // Wait (at most 3s) for it to own its bus name
+    QEventLoop waitLoop;
+    QDBusServiceWatcher watcher(service, bus, QDBusServiceWatcher::WatchForRegistration);
+    connect(&watcher, &QDBusServiceWatcher::serviceRegistered, &waitLoop, &QEventLoop::quit);
+    QTimer::singleShot(3000, &waitLoop, &QEventLoop::quit);
+    if (!bus.interface()->isServiceRegistered(service))
+        waitLoop.exec();
 }
 
 void ProcessManager::logout()
@@ -77,6 +113,7 @@ void ProcessManager::logout()
 void ProcessManager::startWindowManager()
 {
     auto *wmProcess = new QProcess;
+    wmProcess->setProcessChannelMode(QProcess::ForwardedChannels);
 
     wmProcess->start(m_app->wayland() ? "kwin_wayland" : "kwin_x11", QStringList());
 
@@ -92,6 +129,12 @@ void ProcessManager::startWindowManager()
 
 void ProcessManager::startDesktopProcess()
 {
+    // lingmo-settings-daemon asks for this once its theme module is up, which happens
+    // again whenever the daemon restarts: the desktop is already running (and
+    // supervised) by then, and a second set would kill the first one
+    if (m_desktopAutoStartD)
+        return;
+
     // When the lingmo-settings-daemon theme module is loaded, start the desktop.
     // In the way, there will be no problem that desktop and launcher can't get wallpaper.
 
@@ -108,21 +151,59 @@ void ProcessManager::startDesktopProcess()
 
     m_desktopAutoStartD = std::make_shared<LINGMO_SESSION::Daemon>(list);
 
-    // Auto start
-    QTimer::singleShot(100, this, &ProcessManager::loadAutoStartProcess);
+    // Auto start once the statusbar hosts the tray (org.kde.StatusNotifierWatcher):
+    // apps that check for a tray at startup (Qt's QSystemTrayIcon, Electron, ...)
+    // otherwise give up on their icon. Don't hold the session back for more than 5s.
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    if (bus.interface()->isServiceRegistered(QStringLiteral("org.kde.StatusNotifierWatcher"))) {
+        QTimer::singleShot(100, this, &ProcessManager::loadAutoStartProcess);
+        return;
+    }
+
+    auto *trayWatcher = new QDBusServiceWatcher(QStringLiteral("org.kde.StatusNotifierWatcher"), bus,
+                                                QDBusServiceWatcher::WatchForRegistration, this);
+    auto *timeout = new QTimer(this);
+    timeout->setSingleShot(true);
+    auto start = [this, trayWatcher, timeout] {
+        trayWatcher->deleteLater();
+        timeout->deleteLater();
+        trayWatcher->disconnect(this);
+        timeout->disconnect(this);
+        loadAutoStartProcess();
+    };
+    connect(trayWatcher, &QDBusServiceWatcher::serviceRegistered, this, start);
+    connect(timeout, &QTimer::timeout, this, start);
+    timeout->start(5000);
 }
 
 void ProcessManager::startDaemonProcess()
 {
     QList<QPair<QString, QStringList>> list;
+
     list << qMakePair(QString("lingmo-settings-daemon"), QStringList());
     list << qMakePair(QString("lingmo-xembedsniproxy"), QStringList());
     list << qMakePair(QString("lingmo-gmenuproxy"), QStringList());
-    list << qMakePair(QString("lingmo-permission-surveillance"),QStringList());
 //    list << qMakePair(QString("lingmo-clipboard"), QStringList());
     list << qMakePair(QString("lingmo-chotkeys"), QStringList());
 
     m_daemonAutoStartD = std::make_shared<LINGMO_SESSION::Daemon>(list);
+}
+
+// Values of a ';'-separated list key (OnlyShowIn=, NotShowIn=) in a .desktop file's main group
+static QStringList desktopList(const QString &path, const QString &key)
+{
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+        return {};
+    bool inMainGroup = false;
+    while (!f.atEnd()) {
+        const QString line = QString::fromUtf8(f.readLine()).trimmed();
+        if (line.startsWith(QLatin1Char('[')))
+            inMainGroup = (line == QLatin1String("[Desktop Entry]"));
+        else if (inMainGroup && line.startsWith(key + QLatin1Char('=')))
+            return line.mid(key.size() + 1).split(QLatin1Char(';'), Qt::SkipEmptyParts);
+    }
+    return {};
 }
 
 void ProcessManager::loadAutoStartProcess()
@@ -141,16 +222,14 @@ void ProcessManager::loadAutoStartProcess()
             desktop.beginGroup("Desktop Entry");
 
             // Ignore files the require a specific desktop environment
-            if (desktop.contains("NotShowIn")) {
-                const QStringList notShowIn = desktop.value("NotShowIn").toStringList();
-                if (notShowIn.contains("Lingmo"))
-                    continue;
-            }
-            if (desktop.contains("OnlyShowIn")) {
-                const QStringList onlyShowIn = desktop.value("OnlyShowIn").toStringList();
-                if (!onlyShowIn.contains("Lingmo"))
-                    continue;
-            }
+            // QSettings reads ';' as a comment, which would cut "GNOME;Lingmo;" down to
+            // "GNOME": read these desktop-entry lists straight from the file instead
+            const QStringList notShowIn = desktopList(d.absoluteFilePath(file), QStringLiteral("NotShowIn"));
+            if (notShowIn.contains("Lingmo"))
+                continue;
+            const QStringList onlyShowIn = desktopList(d.absoluteFilePath(file), QStringLiteral("OnlyShowIn"));
+            if (!onlyShowIn.isEmpty() && !onlyShowIn.contains("Lingmo"))
+                continue;
 
             const QString execValue = desktop.value("Exec").toString();
 

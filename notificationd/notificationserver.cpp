@@ -43,8 +43,6 @@ uint NotificationServer::Notify(const QString &app_name,
                                 const QVariantMap &hints,
                                 int timeout)
 {
-    Q_UNUSED(hints);
-
     uint id = 0;
 
     const bool wasReplaced = replaces_id > 0;
@@ -69,6 +67,7 @@ uint NotificationServer::Notify(const QString &app_name,
     notification.appIcon = app_icon;
     notification.actions = actions;
     notification.timeout = timeout;
+    notification.desktopEntry = hints.value(QStringLiteral("desktop-entry")).toString();
 
     if (notification.appIcon.startsWith("file://"))
         notification.appIcon = notification.appIcon.replace("file://", "");
@@ -78,6 +77,7 @@ uint NotificationServer::Notify(const QString &app_name,
     if (pidReply.isValid()) {
         pid = pidReply.value();
     }
+    notification.pid = pid;
 
     if (pid > 0) {
         // 查找 app name

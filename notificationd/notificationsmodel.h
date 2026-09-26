@@ -43,6 +43,8 @@ public:
 
     Q_INVOKABLE void close(uint id);
     Q_INVOKABLE void invokeDefaultAction(uint id);
+    // Click on a notification: its default action, or else bring its app forward
+    Q_INVOKABLE void activate(uint id);
 
     int rowOfNotification(uint id) const;
     void removeRows(const QVector<int> &rows);

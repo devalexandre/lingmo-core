@@ -21,8 +21,8 @@ import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Window 2.12
-import QtGraphicalEffects 1.0
-import LingmoUI.Compatible 3.0 as LingmoUI
+import Qt5Compat.GraphicalEffects
+import LingmoUI.CompatibleModule 3.0 as LingmoUI
 import Lingmo.Notification 1.0
 
 NotificationPopup {
@@ -65,10 +65,7 @@ NotificationPopup {
         onExited: timer.restart()
 
         onClicked: {
-            if (model.hasDefaultAction) {
-                notificationsModel.invokeDefaultAction(model.notificationId)
-            }
-
+            notificationsModel.activate(model.notificationId)
             notificationsModel.close(model.notificationId)
         }
     }
@@ -122,7 +119,10 @@ NotificationPopup {
             }
 
             Label {
-                text: model.body
+                text: model.body.replace(/\n/g, "<br>")
+                // The server announces body-markup: <b>, <i>, <a>... (AutoText only looks at the first line)
+                textFormat: Text.StyledText
+                onLinkActivated: (link) => Qt.openUrlExternally(link)
                 visible: text
                 rightPadding: LingmoUI.Units.smallSpacing
                 maximumLineCount: 2

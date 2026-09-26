@@ -18,6 +18,7 @@
  */
 
 #include "application.h"
+#include <QFile>
 #include "sessionadaptor.h"
 
 // Qt
@@ -183,6 +184,10 @@ void Application::initEnvironments()
     // Qt
     qputenv("QT_QPA_PLATFORMTHEME", "lingmo");
     qputenv("QT_PLATFORM_PLUGIN", "lingmo");
+    // A style forced by the host environment (e.g. kvantum) overrides the Lingmo
+    // style and breaks QML that relies on it.
+    qunsetenv("QT_STYLE_OVERRIDE");
+    qunsetenv("QT_QUICK_CONTROLS_STYLE");
     
     // ref: https://stackoverflow.com/questions/34399993/qml-performance-issue-when-updating-an-item-in-presence-of-many-non-overlapping
     qputenv("QT_QPA_UPDATE_IDLE_TIME", "10");
@@ -315,13 +320,61 @@ void Application::initKWinConfig()
     settings.setValue("Placement", "Centered");
     settings.endGroup();
 
-    settings.beginGroup("org.kde.kdecoration2");
-    settings.setValue("BorderSize", "Normal");
-    settings.setValue("ButtonsOnLeft", "");
-    settings.setValue("ButtonsOnRight", "HIAX");
-    settings.setValue("library", "org.lingmo.decoration");
-    settings.setValue("theme", "");
-    settings.endGroup();
+    // Decoration defaults are written once per version, not on every login, so a
+    // layout the user picks later is kept. v2: macOS-style buttons on the left.
+    constexpr int kDecorationDefaultsVersion = 2;
+    if (settings.value("Lingmo/DecorationDefaultsVersion", 0).toInt() < kDecorationDefaultsVersion) {
+        // KWin 6.3+ reads the plugin from kdecoration3 and the button layout from kdecoration2
+        for (const char *group : {"org.kde.kdecoration2", "org.kde.kdecoration3"}) {
+            settings.beginGroup(group);
+            settings.setValue("BorderSize", "Normal");
+            settings.setValue("ButtonsOnLeft", "XIA");   // close, minimize, maximize
+            settings.setValue("ButtonsOnRight", "");
+            settings.setValue("library", "org.lingmo.decoration");
+            settings.setValue("theme", "");
+            settings.endGroup();
+        }
+        settings.setValue("Lingmo/DecorationDefaultsVersion", kDecorationDefaultsVersion);
+    }
+
+    // Lingmo used to ship a partial [kwin] group in /etc/xdg/kglobalshortcutsrc, which
+    // made kglobalacceld register every other KWin shortcut (Alt+Tab, Alt+F4, ...) with
+    // no key and no default, and it saved them that way. Drop those empty entries once
+    // so KWin registers its defaults again; anything the user set is left alone.
+    constexpr int kShortcutsRepairVersion = 1;
+    if (settings.value("Lingmo/ShortcutsRepairVersion", 0).toInt() < kShortcutsRepairVersion) {
+        repairKWinShortcuts();
+        settings.setValue("Lingmo/ShortcutsRepairVersion", kShortcutsRepairVersion);
+    }
+}
+
+void Application::repairKWinShortcuts()
+{
+    // Plain text on purpose: QSettings would rewrite the tab/comma separated values
+    QFile file(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/kglobalshortcutsrc");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return;
+    const QStringList lines = QString::fromUtf8(file.readAll()).split('\n');
+    file.close();
+
+    QStringList kept;
+    bool inKWin = false;
+    int dropped = 0;
+    for (const QString &line : lines) {
+        if (line.startsWith('['))
+            inKWin = line == QLatin1String("[kwin]");
+        const int eq = line.indexOf('=');
+        if (inKWin && eq > 0 && line.mid(eq + 1).startsWith(QLatin1String("none,none,"))) {
+            ++dropped;
+            continue;
+        }
+        kept << line;
+    }
+
+    if (dropped && file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        file.write(kept.join('\n').toUtf8());
+        qDebug() << "Reset" << dropped << "empty KWin shortcuts to their defaults";
+    }
 }
 
 bool Application::syncDBusEnvironment()

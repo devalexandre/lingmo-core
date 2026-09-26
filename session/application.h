@@ -74,6 +74,7 @@ private:
     void initScreenScaleFactors();
     void initXResource();
     void initKWinConfig();
+    void repairKWinShortcuts();
     bool syncDBusEnvironment();
     void importSystemdEnvrionment();
     void createConfigDirectory();

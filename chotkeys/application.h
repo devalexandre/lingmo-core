@@ -4,6 +4,7 @@
 #include <QObject>
 #include "QHotkey/qhotkey.h"
 #include "hotkeys.h"
+#include "metatap.h"
 #include <QSettings>
 #include <QStandardPaths>
 #include <QProcess>
@@ -21,9 +22,12 @@ private slots:
 
 private:
     void cleanSetting();
+    void importForeignShortcuts(QSettings &setting);
     QStringList all;
     QStringList allexec;
     QList<QHotkey*> allkey;
+    MetaTap *m_metaTap = nullptr;
+    QString m_metaExec;   // command bound to Meta on its own, if any
     QSettings setting;
 };
 

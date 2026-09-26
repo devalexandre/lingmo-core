@@ -7,5 +7,7 @@
     </method>
     <signal name="doNotDisturbChanged"></signal>
     <property name="doNotDisturb" type="b" access="read"/>
+    <signal name="countChanged"></signal>
+    <property name="count" type="i" access="read"/>
   </interface>
 </node>

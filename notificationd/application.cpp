@@ -65,6 +65,11 @@ Application::Application(int& argc, char** argv)
         new NotificationAdaptor(this);
         QDBusConnection::sessionBus().registerObject("/Notification", this);
 
+        HistoryModel *history = HistoryModel::self();
+        for (auto sig : {&HistoryModel::rowsInserted, &HistoryModel::rowsRemoved})
+            connect(history, sig, this, &Application::countChanged);
+        connect(history, &HistoryModel::modelReset, this, &Application::countChanged);
+
         qmlRegisterType<NotificationsModel>("Lingmo.Notification", 1, 0, "NotificationsModel");
         qmlRegisterType<HistoryModel>("Lingmo.Notification", 1, 0, "HistoryModel");
         qmlRegisterType<ScreenHelper>("Lingmo.Notification", 1, 0, "ScreenHelper");
@@ -131,4 +136,9 @@ bool Application::parseCommandLineArgs()
     }
 
     return m_instance;
+}
+
+int Application::count() const
+{
+    return HistoryModel::self()->rowCount();
 }

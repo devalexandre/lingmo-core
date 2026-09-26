@@ -42,6 +42,7 @@ public:
     void start();
     void logout();
 
+    void startGlobalShortcuts();
     void startWindowManager();
     void startDesktopProcess();
     void startDaemonProcess();
@@ -64,6 +65,7 @@ private:
 
     // Daemon helper for other daemon components
     std::shared_ptr<LINGMO_SESSION::Daemon> m_daemonAutoStartD;
+    std::shared_ptr<LINGMO_SESSION::Daemon> m_shortcutsD;
 
     // Daemon helper for User Auto Start Process
     std::shared_ptr<LINGMO_SESSION::Daemon> m_userAutoStartD;

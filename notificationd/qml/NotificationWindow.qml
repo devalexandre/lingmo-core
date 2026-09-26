@@ -22,8 +22,8 @@ import QtQml 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Window 2.12
-import QtGraphicalEffects 1.0
-import LingmoUI.Compatible 3.0 as LingmoUI
+import Qt5Compat.GraphicalEffects
+import LingmoUI.CompatibleModule 3.0 as LingmoUI
 import Lingmo.Notification 1.0
 
 Item {
@@ -45,8 +45,8 @@ Item {
     }
 
     readonly property rect screenRect: {
-        let rect = Qt.rect(screen.screenGeometry.x + screen.availableScreenRect.x,
-                           screen.screenGeometry.y + screen.availableScreenRect.y,
+        let rect = Qt.rect(screen.availableScreenRect.x,   // already in virtual desktop coordinates
+                           screen.availableScreenRect.y,
                            screen.availableScreenRect.width,
                            screen.availableScreenRect.height)
         return rect
@@ -180,6 +180,10 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         z: 999
+                        onClicked: {
+                            historyModel.activate(index)
+                            NotificationDialog.hide()
+                        }
                     }
 
                     RowLayout {
@@ -232,7 +236,10 @@ Item {
                             RowLayout {
                                 Label {
                                     id: bodyLabel
-                                    text: model.body
+                                    text: model.body.replace(/\n/g, "<br>")
+                                    // The server announces body-markup: <b>, <i>, <a>... (AutoText only looks at the first line)
+                                    textFormat: Text.StyledText
+                                    onLinkActivated: (link) => Qt.openUrlExternally(link)
                                     visible: text
                                     rightPadding: LingmoUI.Units.smallSpacing
                                     maximumLineCount: 2

@@ -18,6 +18,7 @@
  */
 
 #include "historymodel.h"
+#include "appactivator.h"
 #include "datehelper.h"
 
 #include <QSettings>
@@ -154,4 +155,13 @@ void HistoryModel::initDatas()
 void HistoryModel::updateTime()
 {
     emit layoutChanged();
+}
+
+void HistoryModel::activate(int index)
+{
+    if (index < 0 || index >= m_notifications.size())
+        return;
+
+    const Notification &notification = m_notifications.at(index);
+    AppActivator::activate(notification.pid, {notification.desktopEntry, notification.appIcon, notification.appName});
 }

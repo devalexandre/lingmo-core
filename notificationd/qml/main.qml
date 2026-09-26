@@ -9,8 +9,8 @@ import QtQml 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Window 2.12
-import QtGraphicalEffects 1.0
-import LingmoUI.Compatible 3.0 as LingmoUI
+import Qt5Compat.GraphicalEffects
+import LingmoUI.CompatibleModule 3.0 as LingmoUI
 import Lingmo.Notification 1.0
 
 Item {
@@ -25,8 +25,8 @@ Item {
     readonly property real popupMaximumScreenFill: 0.4
 
     readonly property rect screenRect: {
-        let rect = Qt.rect(screen.screenGeometry.x + screen.availableScreenRect.x,
-                           screen.screenGeometry.y + screen.availableScreenRect.y,
+        let rect = Qt.rect(screen.availableScreenRect.x,   // already in virtual desktop coordinates
+                           screen.availableScreenRect.y,
                            screen.availableScreenRect.width,
                            screen.availableScreenRect.height)
         return rect

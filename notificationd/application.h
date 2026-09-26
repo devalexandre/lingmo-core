@@ -30,6 +30,8 @@ class Application : public QApplication
 {
     Q_OBJECT
     Q_PROPERTY(bool doNotDisturb READ doNotDisturb WRITE setDoNotDisturb NOTIFY doNotDisturbChanged)
+    // Notifications currently kept in the notification center (status bar badge)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
     explicit Application(int& argc, char** argv);
@@ -37,12 +39,14 @@ public:
     void showWindow();
     void setDoNotDisturb(bool enabled);
     bool doNotDisturb() const;
+    int count() const;
 
     int run();
     bool parseCommandLineArgs();
 
 signals:
     void doNotDisturbChanged();
+    void countChanged();
 
 private:
     NotificationServer *m_notificationServer;

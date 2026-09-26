@@ -41,4 +41,5 @@ target_link_libraries(${TARGET}
 )
 
 install(TARGETS ${TARGET} DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(PROGRAMS lingmo-reload DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES lingmo-xsession.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/xsessions/)

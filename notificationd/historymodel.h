@@ -49,6 +49,8 @@ public:
 
     Q_INVOKABLE void add(const Notification &notification);
     Q_INVOKABLE void remove(int index);
+    // Click on a past notification: bring its app forward
+    Q_INVOKABLE void activate(int index);
     Q_INVOKABLE void clearAll();
     Q_INVOKABLE void save();
 
