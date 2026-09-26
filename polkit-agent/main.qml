@@ -11,11 +11,19 @@ Item {
     width: 450
     height: heightValue
 
+    // Last PAM message (pam_fprintd: "Place your finger...", "Failed to match fingerprint")
+    property string pamMessage: ""
+    property bool pamMessageIsError: false
+
     Connections {
         target: confirmation
         function onFailure() {
             doneButton.enabled = true
             passwordInput.enabled = true
+        }
+        function onMessage(text, error) {
+            root.pamMessage = text
+            root.pamMessageIsError = error
         }
     }
 
@@ -126,6 +134,16 @@ Item {
                 Keys.onEscapePressed: {
                     confirmation.setConfirmationResult("")
                 }
+            }
+
+            Label {
+                visible: text !== ""
+                text: root.pamMessage !== "" ? root.pamMessage
+                      : confirmation.fingerprint ? qsTr("Touch the fingerprint reader or type your password")
+                      : ""
+                color: root.pamMessageIsError ? "#E95B4E" : LingmoUI.Theme.disabledTextColor
+                wrapMode: Text.Wrap
+                Layout.fillWidth: true
             }
 
             RowLayout {

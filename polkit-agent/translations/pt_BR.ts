@@ -4,12 +4,17 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../main.qml" line="+115"/>
+        <location filename="../main.qml" line="+123"/>
         <source>Password</source>
         <translation>Senha</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+19"/>
+        <source>Touch the fingerprint reader or type your password</source>
+        <translation>Toque no leitor de digital ou digite a senha</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>Done</source>
         <translation>Concluído</translation>
     </message>

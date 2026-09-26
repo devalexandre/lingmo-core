@@ -53,13 +53,15 @@ void PolKitAgentListener::initiateAuthentication(const QString &actionId,
     m_inProgress = true;
 
     m_dialog = new Dialog(actionId, message, cookie, identities.first().toString(), iconName, result);
-    m_session = new PolkitQt1::Agent::Session(identities.first(), cookie, result);
 
     connect(m_dialog.data(), &Dialog::accepted, this, &PolKitAgentListener::onDialogAccepted);
     connect(m_dialog.data(), &Dialog::cancel, this, &PolKitAgentListener::onDialogCanceled);
 
     m_dialog.data()->show();
-    m_session.data()->initiate();
+
+    // The session is started by tryAgain() below. Starting a second one here
+    // left an orphan PAM conversation running, which with pam_fprintd first in
+    // the stack also claimed the fingerprint reader.
 
     if (!identities.isEmpty()) {
         m_selectedUser = identities[0];
@@ -91,6 +93,15 @@ void PolKitAgentListener::tryAgain()
         m_session = new PolkitQt1::Agent::Session(m_selectedUser, m_cookie, m_result);
         connect(m_session.data(), SIGNAL(request(QString, bool)), this, SLOT(request(QString, bool)));
         connect(m_session.data(), SIGNAL(completed(bool)), this, SLOT(completed(bool)));
+        // PAM messages, e.g. pam_fprintd's "Place your finger on the reader"
+        connect(m_session.data(), &PolkitQt1::Agent::Session::showInfo, this, [this](const QString &text) {
+            if (!m_dialog.isNull())
+                m_dialog.data()->showMessage(text, false);
+        });
+        connect(m_session.data(), &PolkitQt1::Agent::Session::showError, this, [this](const QString &text) {
+            if (!m_dialog.isNull())
+                m_dialog.data()->showMessage(text, true);
+        });
 
         m_session.data()->initiate();
     }
