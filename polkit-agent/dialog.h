@@ -59,6 +59,10 @@ public:
     Q_PROPERTY(bool fingerprint READ fingerprint CONSTANT)
     bool fingerprint() const;
 
+    // lingmo-faceauth (webcam) was put first in the polkit-1 stack by lingmo-settings
+    Q_PROPERTY(bool face READ face CONSTANT)
+    bool face() const;
+
     Q_PROPERTY(QString message READ message NOTIFY changed)
     Q_PROPERTY(QString action READ action NOTIFY changed)
     Q_PROPERTY(QString cookie READ cookie NOTIFY changed)

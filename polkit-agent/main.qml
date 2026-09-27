@@ -11,7 +11,8 @@ Item {
     width: 450
     height: heightValue
 
-    // Last PAM message (pam_fprintd: "Place your finger...", "Failed to match fingerprint")
+    // Last PAM message (pam_fprintd: "Place your finger...", "Failed to match fingerprint";
+    // lingmo-faceauth: "Look at the camera...", "Face not recognized...")
     property string pamMessage: ""
     property bool pamMessageIsError: false
 
@@ -139,6 +140,9 @@ Item {
             Label {
                 visible: text !== ""
                 text: root.pamMessage !== "" ? root.pamMessage
+                      : confirmation.face && confirmation.fingerprint
+                        ? qsTr("Look at the camera or touch the fingerprint reader, or type your password")
+                      : confirmation.face ? qsTr("Look at the camera or type your password")
                       : confirmation.fingerprint ? qsTr("Touch the fingerprint reader or type your password")
                       : ""
                 color: root.pamMessageIsError ? "#E95B4E" : LingmoUI.Theme.disabledTextColor

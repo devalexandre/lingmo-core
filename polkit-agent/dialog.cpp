@@ -124,3 +124,9 @@ bool Dialog::fingerprint() const
     // Written by lingmo-settings' fingerprint-pam helper
     return QFile::exists(QStringLiteral("/etc/lingmo-fingerprint-enabled"));
 }
+
+bool Dialog::face() const
+{
+    // Written by lingmo-settings' face-pam helper when sudo and polkit accept the face
+    return QFile::exists(QStringLiteral("/etc/lingmo-face-admin-enabled"));
+}
